@@ -1,0 +1,19 @@
+version: '3.2'
+services:
+  study:
+    build: .
+    ports:
+      - "9704:6470"
+    volumes:
+      - ..:/work
+    tty: true
+    #command: nvidia-smi
+    command: tail -f /dev/null
+    stdin_open: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
