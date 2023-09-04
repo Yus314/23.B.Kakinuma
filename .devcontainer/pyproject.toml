@@ -20,6 +20,7 @@ diffusers = "^0.17.1"
 transformers = "^4.30.2"
 matplotlib = "^3.7.2"
 ipython = "^8.14.0"
+accelerate = "^0.22.0"
 
 [build-system]
 requires = ["poetry-core"]
