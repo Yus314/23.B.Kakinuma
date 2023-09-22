@@ -21,13 +21,13 @@ vae, tokenizer, text_encoder, unet, scheduler = model_load(torch_device)
 
 # 画像読み込み
 image_dir: str = "/work/Data/in/BSDS300/images/test"
-image_file: str = "21077.jpg"
+image_file: str = "19021.jpg"
 image_path: str = image_dir + "/" + image_file
 y: torch.tensor = load_image(image_path, torch_device)
 
 # 設定
-prompt = ["racing car"]
-left = 40
+prompt = ["cactus"]
+left = 0
 up = 0
 height = 512  # Stable Diffusion標準の出力画像サイズ (高さ)
 width = 512  # Stable Diffusion標準の出力画像サイズ (幅)

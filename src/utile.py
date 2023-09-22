@@ -65,6 +65,6 @@ def save_masked_and_origin_image(image_path, prompt, save_dir, left, up):
     zz = np.concatenate([zz[up:, :], zz[:up, :]], 0)
     zzz = Image.fromarray(zz)
     zzz.save(save_dir + prompt[0] + "/" + "GT" + prompt[0] + ".png")
-    zz[223:288, 223:288, :] = 0
+    zz[206:306, 206:306, :] = 0
     zz = Image.fromarray(zz)
     zz.save(save_dir + prompt[0] + "/" + "masked" + prompt[0] + ".png")

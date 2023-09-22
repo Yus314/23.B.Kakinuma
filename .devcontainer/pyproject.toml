@@ -21,6 +21,10 @@ transformers = "^4.30.2"
 matplotlib = "^3.7.2"
 ipython = "^8.14.0"
 accelerate = "^0.22.0"
+mypy = "^1.5.1"
+flake8 = "^6.1.0"
+torchtyping = "^0.1.4"
+seaborn = "^0.12.2"
 
 [build-system]
 requires = ["poetry-core"]

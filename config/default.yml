@@ -1,0 +1,8 @@
+prompt:
+  - kangaroo
+height : 512  # Stable Diffusion標準の出力画像サイズ (高さ)
+width : 512  # Stable Diffusion標準の出力画像サイズ (幅)
+num_inference_steps : 30  # ノイズ除去のステップ数
+guidance_scale : 7.5  # ガイダンスの強さ
+seed : 11  # 潜在空間のノイズ生成のためのシード生成
+batch_size : 1

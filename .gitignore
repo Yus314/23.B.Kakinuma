@@ -1,5 +1,5 @@
 /.devcontainer/celeba_hq.ckpt
-*.jpg
-*.png
+src/models
 *.tgz
 *.ckpt
+DDNM/
