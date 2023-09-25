@@ -1,9 +1,9 @@
 import argparse
 import inspect
 
-#from . import gaussian_diffusion as gd
-#from .respace import SpacedDiffusion, space_timesteps
-from .unet import SuperResModel, UNetModel, EncoderUNetModel
+# from . import gaussian_diffusion as gd
+# from .respace import SpacedDiffusion, space_timesteps
+from .unet import EncoderUNetModel, SuperResModel, UNetModel
 
 NUM_CLASSES = 1000
 
@@ -144,7 +144,7 @@ def create_model(
     resblock_updown=False,
     use_fp16=False,
     use_new_attention_order=False,
-    **kwargs
+    **kwargs,
 ):
     if channel_mult == "":
         if image_size == 512:
