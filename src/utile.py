@@ -1,7 +1,13 @@
+import cv2
+import lpips
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from diffusers import AutoencoderKL, DDIMScheduler, UNet2DConditionModel
 from PIL import Image
+from skimage import img_as_float
+from skimage.color import rgb2gray
+from skimage.metrics import structural_similarity as ssim
 from torchvision import transforms as tfms
 from transformers import CLIPTextModel, CLIPTokenizer
 
@@ -64,7 +70,100 @@ def save_masked_and_origin_image(image_path, prompt, save_dir, left, up):
     zz = np.concatenate([zz[:, left:], zz[:, :left]], 1)
     zz = np.concatenate([zz[up:, :], zz[:up, :]], 0)
     zzz = Image.fromarray(zz)
-    zzz.save(save_dir + prompt[0] + "/" + "GT" + prompt[0] + ".png")
-    zz[206:306, 206:306, :] = 0
+    zzz.save(
+        save_dir
+        + prompt[0][0 : min(len(prompt[0]), 20)]
+        + "/"
+        + "GT"
+        + prompt[0][0 : min(len(prompt[0]), 20)]
+        + ".png"
+    )
+    zz[210:305, 210:305, :] = 0
     zz = Image.fromarray(zz)
-    zz.save(save_dir + prompt[0] + "/" + "masked" + prompt[0] + ".png")
+    zz.save(
+        save_dir
+        + prompt[0][0 : min(len(prompt[0]), 20)]
+        + "/"
+        + "masked"
+        + prompt[0][0 : min(len(prompt[0]), 20)]
+        + ".png"
+    )
+
+
+def calculate_ssim(save_dir, prompt, C1=0.01, C2=0.03):
+    # Load the images
+    x = np.array(
+        Image.open(
+            save_dir
+            + "/"
+            + prompt[0][0 : min(len(prompt[0]), 20)]
+            + "/my_"
+            + prompt[0][0 : min(len(prompt[0]), 20)]
+            + ".png"
+        )
+    )
+    y = np.array(
+        Image.open(
+            save_dir
+            + "/"
+            + prompt[0][0 : min(len(prompt[0]), 20)]
+            + "/GT"
+            + prompt[0][0 : min(len(prompt[0]), 20)]
+            + ".png"
+        )
+    )
+
+    # Calculate SSIM for each color channel
+    ssim_r = ssim(x[:, :, 0], y[:, :, 0], data_range=255)
+    ssim_g = ssim(x[:, :, 1], y[:, :, 1], data_range=255)
+    ssim_b = ssim(x[:, :, 2], y[:, :, 2], data_range=255)
+
+    # Calculate the mean SSIM
+    mean_ssim = (ssim_r + ssim_g + ssim_b) / 3.0
+
+    return mean_ssim
+
+
+def calc_metrics(save_dir, prompt):
+    img_my = cv2.imread(
+        save_dir
+        + "/"
+        + prompt[0][0 : min(len(prompt[0]), 20)]
+        + "/my_"
+        + prompt[0][0 : min(len(prompt[0]), 20)]
+        + ".png"
+    )
+    img_GT = cv2.imread(
+        save_dir
+        + "/"
+        + prompt[0][0 : min(len(prompt[0]), 20)]
+        + "/GT"
+        + prompt[0][0 : min(len(prompt[0]), 20)]
+        + ".png"
+    )
+    img_my_PL = Image.open(
+        save_dir
+        + "/"
+        + prompt[0][0 : min(len(prompt[0]), 20)]
+        + "/my_"
+        + prompt[0][0 : min(len(prompt[0]), 20)]
+        + ".png"
+    )
+    img_GT_PL = Image.open(
+        save_dir
+        + "/"
+        + prompt[0][0 : min(len(prompt[0]), 20)]
+        + "/GT"
+        + prompt[0][0 : min(len(prompt[0]), 20)]
+        + ".png"
+    )
+    img_my_PL = (tfms.functional.to_tensor(img_my_PL) - 0.5) * 2
+    img_my_PL.unsqueeze(0)
+    img_GT_PL = (tfms.functional.to_tensor(img_GT_PL) - 0.5) * 2
+    img_GT_PL.unsqueeze(0)
+    print("PSNR: ", cv2.PSNR(img_my, img_GT))
+    loss_fn_alex = lpips.LPIPS(net="alex")
+    d = loss_fn_alex(img_my_PL, img_GT_PL)
+    print("LPIPS: ", float(d[0][0][0][0]))
+    ssim_value = calculate_ssim(save_dir, prompt)
+    print("SSIM:", ssim_value)
