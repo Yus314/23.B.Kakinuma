@@ -13,30 +13,22 @@
             "cwd": "${fileDirname}",
             "console": "integratedTerminal",
             "justMyCode": true,
-            /*
             "args": [
                 "--ni",
-                "--simplified",
                 "--config",
-                "my_config.yml",
-                //"celeba_hq.yml",
+                "imagenet_256.yml",
                 "--path_y",
-                "my_dataset",
-                //"celeba_hq",
+                "imagenet",
                 "--eta",
                 "0.85",
                 "--deg",
                 // コマンドでは""がついていたがsrt型として渡されるため必要ないっぽい
                 "inpainting",
-                //"sr_averagepooling",
-                "--deg_scale",
-                "4.0",
                 "--sigma_y",
                 "0",
                 "-i",
-                "my_folder"
+                "imagenet_inpainting"
             ]
-            */
         }
     ]
 }

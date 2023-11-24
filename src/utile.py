@@ -8,6 +8,7 @@ from PIL import Image
 from skimage import img_as_float
 from skimage.color import rgb2gray
 from skimage.metrics import structural_similarity as ssim
+from torchmetrics.image.kid import KernelInceptionDistance
 from torchvision import transforms as tfms
 from transformers import CLIPTextModel, CLIPTokenizer
 

@@ -1,5 +1,6 @@
 /.devcontainer/celeba_hq.ckpt
 src/models
+src/cache
 *.tgz
 *.ckpt
 DDNM/
