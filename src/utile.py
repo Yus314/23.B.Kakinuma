@@ -15,17 +15,25 @@ from transformers import CLIPTextModel, CLIPTokenizer
 
 def model_load(device: str):
     # 潜在空間を画像空間にデコードするためのVAEモデルを読み込む
-    vae = AutoencoderKL.from_pretrained("models/vae")
+    #vae = AutoencoderKL.from_pretrained("models/vae")
+    vae = AutoencoderKL.from_pretrained("CompVis/stable-diffusion-v1-4", subfolder="vae", token="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")
 
     # トークナイズとテキストのエンコード用に、tokenizerと、text_encoderを読み込む
-    tokenizer = CLIPTokenizer.from_pretrained("models/tokenizer")
-    text_encoder = CLIPTextModel.from_pretrained("models/text_encoder")
+    #tokenizer = CLIPTokenizer.from_pretrained("models/tokenizer")
+    #text_encoder = CLIPTextModel.from_pretrained("models/text_encoder")
+    tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-large-patch14")
+    text_encoder = CLIPTextModel.from_pretrained("openai/clip-vit-large-patch14")
 
     # 潜在空間を生成するためのU-Netモデルの指定
-    unet = UNet2DConditionModel.from_pretrained("models/unet")
-
+    #unet = UNet2DConditionModel.from_pretrained("models/unet")
+    unet = UNet2DConditionModel.from_pretrained("CompVis/stable-diffusion-v1-4", subfolder="unet", token="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")
     # ノイズスケジューラの指定
-    scheduler = DDIMScheduler.from_pretrained("models/scheduler")
+    #scheduler = DDIMScheduler.from_pretrained("models/scheduler")
+    scheduler = DDIMScheduler.from_pretrained(
+    "CompVis/stable-diffusion-v1-4",
+    subfolder="scheduler",
+    token="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",
+    )
 
     # モデルをGPUに移す
     vae = vae.to(device)
@@ -79,7 +87,7 @@ def save_masked_and_origin_image(image_path, prompt, save_dir, left, up):
         + prompt[0][0 : min(len(prompt[0]), 20)]
         + ".png"
     )
-    zz[210:305, 210:305, :] = 0
+    zz[168:344, 168:344, :] = 0
     zz = Image.fromarray(zz)
     zz.save(
         save_dir
