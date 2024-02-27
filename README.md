@@ -19,7 +19,7 @@
 * cuDNN 8.4.1
 
 ### pyenv のインストール方法
-1. $git clone git://github.com/yyuu/pyenv.git ~/.pyenv
+1. $git clone https://github.com/pyenv/pyenv.git ~/.pyenv
 2. $ echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bash_profile
 3. $ echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bash_profile
 4. $echo 'eval "$(pyenv init -)"' >> ~/.bash_profile
