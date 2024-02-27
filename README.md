@@ -23,6 +23,14 @@ pyenv install 3.10.12
 pyenv local 3.10.12
 python -m venv .venv
 ```
+
+### poetry によるライブラリのインストール
+pyproject.tomlがあるディレクトリで
+```
+poetry init
+poetry install
+```
+
 `.devcontainer`にある`pyproject.toml`か'Dockerfile'をもとに仮想環境を構築してください．（不要なライブラリが含まれている可能性もあります）
 
 
