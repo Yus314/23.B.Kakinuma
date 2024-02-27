@@ -17,7 +17,12 @@
 * PyTorch 2.0.0
 * CUDA 11.3
 * cuDNN 8.4.1
-
+### venv による環境構築法
+```
+pyenv install 3.10.12
+pyenv local 3.10.12
+python -m venv .venv
+```
 `.devcontainer`にある`pyproject.toml`か'Dockerfile'をもとに仮想環境を構築してください．（不要なライブラリが含まれている可能性もあります）
 
 
