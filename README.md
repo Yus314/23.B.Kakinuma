@@ -33,6 +33,7 @@ python -m venv .venv
 ```
 
 ### poetry によるライブラリのインストール
+poetry をインストールし、
 pyproject.tomlがあるディレクトリで
 ```
 poetry init
