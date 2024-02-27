@@ -10,7 +10,7 @@
 
 ## 環境構築
 仮想環境：venv
-* OS：Windows10 22H2
+* OS：Ubuntu22.04
 * CPU：Intel Core i7-11700 2.50GHz
 * GPU：NVIDIA GeForce RTX 3080 Ti
 * Python 3.10.12
