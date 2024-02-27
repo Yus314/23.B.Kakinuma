@@ -22,8 +22,8 @@
 1. $git clone https://github.com/pyenv/pyenv.git ~/.pyenv
 2. $ echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bash_profile
 3. $ echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bash_profile
-4. $echo 'eval "$(pyenv init -)"' >> ~/.bash_profile
-5. $source ~/.bash_profile
+4. $　echo 'eval "$(pyenv init -)"' >> ~/.bash_profile
+5. $　source ~/.bash_profile
 
 ### venv による環境構築法
 ```
