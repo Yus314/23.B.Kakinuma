@@ -17,6 +17,14 @@
 * PyTorch 2.0.0
 * CUDA 11.3
 * cuDNN 8.4.1
+
+### pyenv のインストール方法
+1. $git clone git://github.com/yyuu/pyenv.git ~/.pyenv
+2. $ echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bash_profile
+3. $ echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bash_profile
+4. $echo 'eval "$(pyenv init -)"' >> ~/.bash_profile
+5. $source ~/.bash_profile
+
 ### venv による環境構築法
 ```
 pyenv install 3.10.12
