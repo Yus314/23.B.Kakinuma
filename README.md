@@ -18,23 +18,16 @@
 * CUDA 11.3
 * cuDNN 8.4.1
 
-### pyenv のインストール方法
-1. git clone https://github.com/pyenv/pyenv.git ~/.pyenv
-2. echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bash_profile
-3. echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bash_profile
-4. echo 'eval "$(pyenv init -)"' >> ~/.bash_profile
-5. source ~/.bash_profile
 
-### venv による環境構築法
-```
-pyenv install 3.10.12
-pyenv local 3.10.12
-python -m venv .venv
-```
 
 ### poetry によるライブラリのインストール
 poetry をインストールし、
 pyproject.tomlがあるディレクトリで
+```
+poetry shell
+```
+作成された仮想環境を実行
+[参考](https://zenn.dev/claustra01/articles/0d8efd08905526)
 ```
 poetry init
 poetry install
@@ -50,6 +43,10 @@ poetry install
 学習したモデルを用いてテストを行う場合は，次のコードを実行します．テスト時のオプションについては実行ファイルの中で指定し，実行時の引数は特に取りません．  
   
 `python main.py`  
+
+## エラーが出た時の資料
+[libcuda.so: cannot open shared object file](https://qiita.com/cacaoMath/items/811146342946cdde5b83)
+[poetry](https://zenn.dev/canonrock/articles/poetry_basics)
   
 デフォルトでは以下の設定でテストを行います．
 * データセット： BSD 200枚
