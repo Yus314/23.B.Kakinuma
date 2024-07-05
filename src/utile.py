@@ -15,24 +15,41 @@ from transformers import CLIPTextModel, CLIPTokenizer
 
 def model_load(device: str):
     # 潜在空間を画像空間にデコードするためのVAEモデルを読み込む
-    #vae = AutoencoderKL.from_pretrained("models/vae")
-    vae = AutoencoderKL.from_pretrained("CompVis/stable-diffusion-v1-4", subfolder="vae", token="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")
+    # vae = AutoencoderKL.from_pretrained("models/vae")
+    # vae = AutoencoderKL.from_pretrained(
+    #    "johnrobinsn/miniSD",
+    #    subfolder="vae",
+    #    token="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",
+    # )
+    vae = AutoencoderKL.from_pretrained(
+        "CompVis/stable-diffusion-v1-4",
+        subfolder="vae",
+        token="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",
+    )
+    # vae = AutoencoderKL.from_pretrained("justinpinkney/miniSD", subfolder="vae")
+    # vae = AutoencoderKL.from_pretrained("johnrobinsn/minisd", subfolder="vae")
 
     # トークナイズとテキストのエンコード用に、tokenizerと、text_encoderを読み込む
-    #tokenizer = CLIPTokenizer.from_pretrained("models/tokenizer")
-    #text_encoder = CLIPTextModel.from_pretrained("models/text_encoder")
+    # tokenizer = CLIPTokenizer.from_pretrained("models/tokenizer")
+    # text_encoder = CLIPTextModel.from_pretrained("models/text_encoder")
     tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-large-patch14")
     text_encoder = CLIPTextModel.from_pretrained("openai/clip-vit-large-patch14")
 
     # 潜在空間を生成するためのU-Netモデルの指定
-    #unet = UNet2DConditionModel.from_pretrained("models/unet")
-    unet = UNet2DConditionModel.from_pretrained("CompVis/stable-diffusion-v1-4", subfolder="unet", token="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")
+    # unet = UNet2DConditionModel.from_pretrained("models/unet")
+    unet = UNet2DConditionModel.from_pretrained(
+        "CompVis/stable-diffusion-v1-4",
+        # "johnrobinsn/miniSD",
+        subfolder="unet",
+        token="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",
+    )
     # ノイズスケジューラの指定
-    #scheduler = DDIMScheduler.from_pretrained("models/scheduler")
+    # scheduler = DDIMScheduler.from_pretrained("models/scheduler")
     scheduler = DDIMScheduler.from_pretrained(
-    "CompVis/stable-diffusion-v1-4",
-    subfolder="scheduler",
-    token="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",
+        "CompVis/stable-diffusion-v1-4",
+        # "johnrobinsn/miniSD",
+        subfolder="scheduler",
+        token="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",
     )
 
     # モデルをGPUに移す
@@ -45,6 +62,7 @@ def model_load(device: str):
 
 def load_image(path: str, device: str):
     y: Image = Image.open(path).resize((512, 512))
+    # y: Image = Image.open(path).resize((256, 256))
     y = tfms.functional.to_tensor(y)
     y = y.to(device)
     return y

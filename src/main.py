@@ -2,19 +2,15 @@ import os
 
 import numpy as np
 import torch
+from clip_interrogator import Config, Interrogator
 from PIL import Image
 from torch import autocast
 from torchvision import transforms as tfms
 from tqdm.auto import tqdm
-from clip_interrogator import Config, Interrogator
+
 from sch_plus import randn_tensor
-from utile import (
-    calc_metrics,
-    gen_text_embeddings,
-    load_image,
-    model_load,
-    save_masked_and_origin_image,
-)
+from utile import (calc_metrics, gen_text_embeddings, load_image, model_load,
+                   save_masked_and_origin_image)
 
 # Set device
 torch_device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -23,37 +19,72 @@ torch_device = "cuda" if torch.cuda.is_available() else "cpu"
 vae, tokenizer, text_encoder, unet, scheduler = model_load(torch_device)
 # ci = Interrogator(Config(clip_model_name="ViT-L-14/openai"))
 
+
+to_tensor_rfm = tfms.ToTensor()
+
+
+def save_latent(latent, name):
+    image = latent_to_pil(latent).squeeze(0)
+    print(image.shape)
+    image = image.detach().cpu().numpy().transpose(1, 2, 0)
+    images = (image * 255).round().astype("uint8")
+    Image.fromarray(images).save(name + ".png")
+
+
+def latent_to_pil(latents):
+    latents = (1 / 0.18215) * latents
+    # with torch.no_grad():
+    #    image = vae.decode(latents)
+    image = vae.decode(latents)
+    image = (image.sample / 2 + 0.5).clamp(0, 1)
+    image = image.detach().cpu().permute(0, 2, 3, 1).numpy().squeeze()
+    images = (image * 255).round().astype("uint8")
+    images = to_tensor_rfm(images).to(torch_device)
+    images = images.unsqueeze(0)
+    return images
+
+
 # 画像読み込み
-image_dir: str = "/home/user/minigit/23.B.Kakinuma/Data/in/BSDS300/images/train"
+image_dir: str = "../Data/in/BSDS500"
 for image_file in os.listdir(image_dir):
-    # image_file: str = "33039.jpg"
 
     image_path: str = image_dir + "/" + image_file
+    # image_path = "./00000.png"
+    # test_image_path = "../Data/out//" + image_file
     y = load_image(image_path, torch_device)
 
     # BLIP でプロンプト作成
     # txt_image = Image.open(image_path)
+    # txt_image = txt_image.resize((512, 512))
+    # txt_image = np.array(txt_image)
+    # txt_image[172:339, 172:339, :] = 0
+    # txt_image = Image.fromarray(txt_image)
     # txt = ci.interrogate(txt_image)
+    # print(txt)
     # 設定
     # prompt = [txt]
     prompt = [""]
-    
+
     left = 0
     up = 0
     height = 512  # Stable Diffusion標準の出力画像サイズ (高さ)
     width = 512  # Stable Diffusion標準の出力画像サイズ (幅)
+    # num_inference_steps = 30  # ノイズ除去のステップ数
     num_inference_steps = 30  # ノイズ除去のステップ数
     guidance_scale = 7.5  # ガイダンスの強さ プロンプトなしなら0
     # guidance_scale = 0  # ガイダンスの強さ プロンプトなしなら0
-    # generator = torch.manual_seed(11)  # 潜在空間のノイズ生成のためのシード生成
-    generator = torch.manual_seed(18)  # 潜在空間のノイズ生成のためのシード生成
+    generator = torch.manual_seed(11)  # 潜在空間のノイズ生成のためのシード生成
+    # generator = torch.manual_seed(18)  # 潜在空間のノイズ生成のためのシード生成
     batch_size = 1
 
-    save_dir = "/home/user/minigit/23.B.Kakinuma/Data/out"
-    if not os.path.exists(save_dir + prompt[0][0 : min(len(prompt[0]), 20)]):
-        os.makedirs(save_dir + prompt[0][0 : min(len(prompt[0]), 20)])
+    save_dir = "../Data/out/BSDS500_136"
+    save_z_dir = save_dir + "_z"
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+    if not os.path.exists(save_z_dir):
+        os.makedirs(save_z_dir)
 
-    #save_masked_and_origin_image(image_path, prompt, save_dir, left, up)
+    # save_masked_and_origin_image(image_path, prompt, save_dir, left, up)
 
     # テキストの準備
     text_embeddings = gen_text_embeddings(
@@ -80,8 +111,12 @@ for image_file in os.listdir(image_dir):
 
     # インペインティング
     mask = torch.ones(1, 4, 64, 64).to(torch_device)
-    #mask[:, :, 15:49, 15:49] = 0
-    mask[:, :, 20:44, 20:44] = 0
+    # mask[:, :, 15:49, 15:49] = 0
+    mask[:, :, 23:41, 23:41] = 0
+    # mask[:, :, 19:45, 19:45] = 0
+    # mask[:, :, 25:38, 25:38] = 0
+
+    # save_latent(mask, "./masked/mask")
 
     mask = mask.to(torch_device)
 
@@ -94,8 +129,10 @@ for image_file in os.listdir(image_dir):
         y = torch.cat([y[:, :, left:], y[:, :, :left]], 2)
         y = torch.cat([y[:, up:, :], y[:, :up, :]], 1)
         # y[:, 148:364, 148:364] = 0
-        y[:, 168:344, 168:344] = 0
-        #y[:,:,:]=0
+        y[:, 188:323, 188:323] = 0
+        # y[:, 208:303, 208:303] = 0
+        # y[:, 84:172, 84:172] = 0
+        # y[:,:,:]=0
         y = torch.unsqueeze(y, dim=0)
         y = 0.1825 * vae.encode(2 * y - 1).latent_dist.mean
 
@@ -122,7 +159,7 @@ for image_file in os.listdir(image_dir):
             # ひとつ前のサンプルを計算する x_t -> x_t-1
 
             eta = 0.85
-            #eta = 0.5
+            # eta = 0.5
 
             # 1. get previous step value (=t-1)
             prev_timestep = (
@@ -162,6 +199,7 @@ for image_file in os.listdir(image_dir):
                 A(pred_original_sample) - y
             )
 
+            # save_latent(y, "./masked/y" + str(i))
             # 7. compute x_t without "random noise" of formula (12)
             # from https://arxiv.org/pdf/2010.02502.pdf
             prev_sample = (
@@ -181,6 +219,8 @@ for image_file in os.listdir(image_dir):
 
             latents = prev_sample
 
+        # save_latent(latents, "./changes/latent_" + str(i))
+
     # 画像の拡大縮小とVAEによる復号化
     latents = latents.float()
     latents = 1 / 0.18215 * latents
@@ -193,13 +233,24 @@ for image_file in os.listdir(image_dir):
     image = image.detach().cpu().permute(0, 2, 3, 1).numpy()
     images = (image * 255).round().astype("uint8")
     final_pil = np.array(Image.open(image_path).resize((512, 512)), np.uint8)
-    final_pil[168:344, 168:344, :] = images[0, 168:344, 168:344, :]
+    # final_pil = np.array(Image.open(image_path).resize((256, 256)), np.uint8)
+    iimages = Image.fromarray(images[0])
+    iimages.save(
+        save_dir
+        + "_z/"
+        + image_file
+        # + prompt[0][0 : min(len(prompt[0]), 20)]:
+        # + "/my_"
+        # + prompt[0][0 : min(len(prompt[0]), 20)]
+        # + ".png"
+    )
+    final_pil[188:323, 188:323, :] = images[0, 188:323, 188:323, :]
     ffinal_pil = Image.fromarray(final_pil)
-    #pil_images = [Image.fromarray(image) for image in images]
-    #pil_images[0].save(
+    # pil_images = [Image.fromarray(image) for image in images]
+    # pil_images[0].save(
     ffinal_pil.save(
         save_dir
-        + "/all-168_344_blip_true_mask/gen"
+        + "/"
         + image_file
         # + prompt[0][0 : min(len(prompt[0]), 20)]:
         # + "/my_"
