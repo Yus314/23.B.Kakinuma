@@ -19,6 +19,6 @@ for image_file in os.listdir(image_dir):
     txt = ci.interrogate(txt_image)
     pair = {"image": image_path, "prompt": txt}
     image_prompt.append(pair)
-json_file = "BSDS500_prompt.json"
+json_file = "ImageNe_1k_prompt.json"
 with open(json_file, "w") as file:
     json.dump(image_prompt, file, indent=4)

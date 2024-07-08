@@ -1,3 +1,4 @@
+import json
 import os
 
 import numpy as np
@@ -44,14 +45,19 @@ def latent_to_pil(latents):
     return images
 
 
+with open("./BSDS500_prompt.json", "r") as f:
+    data = json.load(f)
 # 画像読み込み
-image_dir: str = "../Data/in/BSDS500"
-for image_file in os.listdir(image_dir):
+# image_dir: str = "../Data/in/BSDS500"
+# for image_file in os.listdir(image_dir):
+for item in data:
 
-    image_path: str = image_dir + "/" + image_file
+    # image_path: str = image_dir + "/" + image_file
     # image_path = "./00000.png"
     # test_image_path = "../Data/out//" + image_file
-    y = load_image(image_path, torch_device)
+    # y = load_image(image_path, torch_device)
+    y = load_image(item["image"], torch_device)
+    image_path = item["image"]
 
     # BLIP でプロンプト作成
     # txt_image = Image.open(image_path)
@@ -63,7 +69,8 @@ for image_file in os.listdir(image_dir):
     # print(txt)
     # 設定
     # prompt = [txt]
-    prompt = [""]
+    txt = item["prompt"]
+    prompt = [txt]
 
     left = 0
     up = 0
@@ -77,7 +84,7 @@ for image_file in os.listdir(image_dir):
     # generator = torch.manual_seed(18)  # 潜在空間のノイズ生成のためのシード生成
     batch_size = 1
 
-    save_dir = "../Data/out/BSDS500_136"
+    save_dir = "../Data/out/BSDS500_168_BLIP"
     save_z_dir = save_dir + "_z"
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
@@ -112,7 +119,7 @@ for image_file in os.listdir(image_dir):
     # インペインティング
     mask = torch.ones(1, 4, 64, 64).to(torch_device)
     # mask[:, :, 15:49, 15:49] = 0
-    mask[:, :, 23:41, 23:41] = 0
+    mask[:, :, 21:43, 21:43] = 0
     # mask[:, :, 19:45, 19:45] = 0
     # mask[:, :, 25:38, 25:38] = 0
 
@@ -128,11 +135,8 @@ for image_file in os.listdir(image_dir):
     with torch.no_grad():
         y = torch.cat([y[:, :, left:], y[:, :, :left]], 2)
         y = torch.cat([y[:, up:, :], y[:, :up, :]], 1)
-        # y[:, 148:364, 148:364] = 0
-        y[:, 188:323, 188:323] = 0
-        # y[:, 208:303, 208:303] = 0
-        # y[:, 84:172, 84:172] = 0
-        # y[:,:,:]=0
+        # y[:, 188:323, 188:323] = 0
+        y[:, 172:340, 172:340] = 0
         y = torch.unsqueeze(y, dim=0)
         y = 0.1825 * vae.encode(2 * y - 1).latent_dist.mean
 
@@ -235,23 +239,24 @@ for image_file in os.listdir(image_dir):
     final_pil = np.array(Image.open(image_path).resize((512, 512)), np.uint8)
     # final_pil = np.array(Image.open(image_path).resize((256, 256)), np.uint8)
     iimages = Image.fromarray(images[0])
-    iimages.save(
-        save_dir
-        + "_z/"
-        + image_file
-        # + prompt[0][0 : min(len(prompt[0]), 20)]:
-        # + "/my_"
-        # + prompt[0][0 : min(len(prompt[0]), 20)]
-        # + ".png"
-    )
-    final_pil[188:323, 188:323, :] = images[0, 188:323, 188:323, :]
+    # iimages.save(
+    #     save_dir
+    #     + "_z/"
+    #     + image_file
+    # + prompt[0][0 : min(len(prompt[0]), 20)]:
+    # + "/my_"
+    # + prompt[0][0 : min(len(prompt[0]), 20)]
+    # + ".png"
+    # )
+    final_pil[172:340, 172:340, :] = images[0, 172:340, 172:340, :]
     ffinal_pil = Image.fromarray(final_pil)
     # pil_images = [Image.fromarray(image) for image in images]
     # pil_images[0].save(
     ffinal_pil.save(
         save_dir
         + "/"
-        + image_file
+        + os.path.basename(item["image"])
+        # + image_file
         # + prompt[0][0 : min(len(prompt[0]), 20)]:
         # + "/my_"
         # + prompt[0][0 : min(len(prompt[0]), 20)]
