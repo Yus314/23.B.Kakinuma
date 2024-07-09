@@ -1,24 +1,61 @@
+import argparse
 import json
 import os
 
 import numpy as np
 import torch
-from clip_interrogator import Config, Interrogator
 from PIL import Image
 from torch import autocast
 from torchvision import transforms as tfms
 from tqdm.auto import tqdm
 
 from sch_plus import randn_tensor
-from utile import (calc_metrics, gen_text_embeddings, load_image, model_load,
-                   save_masked_and_origin_image)
+from utile import (
+    gen_text_embeddings,
+    load_image,
+    model_load,
+)
+
+print("Yes")
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--mask_size", type=int, default=168)
+parser.add_argument("--use_BLIP", type=bool, default=True)
+parser.add_argument("--image_dir", type=str, default="./ImageNet_o_prompt.json")
+parser.add_argument("--seed", type=int, default=11)
+parser.add_argument("--height", type=int, default=512)
+parser.add_argument("--width", type=int, default=512)
+parser.add_argument("--save_dir_option", type=str, default="")
+parser.add_argument("--num_inference_steps", type=int, default=30)
+parser.add_argument("--guidance_scale", type=float, default=7.5)
+parser.add_argument("--batch_size", type=int, default=1)
+parser.add_argument("--eta", type=float, default=0.85)
+parser.add_argument("--latent_mask_min", type=int, default=15)
+parser.add_argument("--latent_mask_max", type=int, default=49)
+
+
+args = parser.parse_args()
+mask_size = args.mask_size
+use_BLIP = args.use_BLIP
+image_dir = args.image_dir
+seed = args.seed
+generator = torch.manual_seed(seed)
+height = args.height
+width = args.width
+save_dir_option = args.save_dir_option
+num_inference_steps = args.num_inference_steps
+guidance_scale = args.guidance_scale
+batch_size = args.batch_size
+eta = args.eta
+latent_mask_min = args.latent_mask_min
+latent_mask_max = args.latent_mask_max
+
 
 # Set device
 torch_device = "cuda" if torch.cuda.is_available() else "cpu"
 
 # モデルを読み込む
 vae, tokenizer, text_encoder, unet, scheduler = model_load(torch_device)
-# ci = Interrogator(Config(clip_model_name="ViT-L-14/openai"))
 
 
 to_tensor_rfm = tfms.ToTensor()
@@ -45,53 +82,20 @@ def latent_to_pil(latents):
     return images
 
 
-with open("./BSDS500_prompt.json", "r") as f:
+with open(image_dir, "r") as f:
     data = json.load(f)
-# 画像読み込み
-# image_dir: str = "../Data/in/BSDS500"
-# for image_file in os.listdir(image_dir):
 for item in data:
-
-    # image_path: str = image_dir + "/" + image_file
-    # image_path = "./00000.png"
-    # test_image_path = "../Data/out//" + image_file
-    # y = load_image(image_path, torch_device)
-    y = load_image(item["image"], torch_device)
     image_path = item["image"]
+    y = load_image(image_path, torch_device)
 
-    # BLIP でプロンプト作成
-    # txt_image = Image.open(image_path)
-    # txt_image = txt_image.resize((512, 512))
-    # txt_image = np.array(txt_image)
-    # txt_image[172:339, 172:339, :] = 0
-    # txt_image = Image.fromarray(txt_image)
-    # txt = ci.interrogate(txt_image)
-    # print(txt)
-    # 設定
-    # prompt = [txt]
-    txt = item["prompt"]
-    prompt = [txt]
+    if use_BLIP:
+        prompt = [item["prompt"]]
+    else:
+        prompt = [""]
 
-    left = 0
-    up = 0
-    height = 512  # Stable Diffusion標準の出力画像サイズ (高さ)
-    width = 512  # Stable Diffusion標準の出力画像サイズ (幅)
-    # num_inference_steps = 30  # ノイズ除去のステップ数
-    num_inference_steps = 30  # ノイズ除去のステップ数
-    guidance_scale = 7.5  # ガイダンスの強さ プロンプトなしなら0
-    # guidance_scale = 0  # ガイダンスの強さ プロンプトなしなら0
-    generator = torch.manual_seed(11)  # 潜在空間のノイズ生成のためのシード生成
-    # generator = torch.manual_seed(18)  # 潜在空間のノイズ生成のためのシード生成
-    batch_size = 1
-
-    save_dir = "../Data/out/BSDS500_168_BLIP"
-    save_z_dir = save_dir + "_z"
+    save_dir = f"../Data/out/{os.path.basename(os.path.dirname(image_path))}_{mask_size}_{'BLIP' if use_BLIP else ''}_{save_dir_option}"
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
-    if not os.path.exists(save_z_dir):
-        os.makedirs(save_z_dir)
-
-    # save_masked_and_origin_image(image_path, prompt, save_dir, left, up)
 
     # テキストの準備
     text_embeddings = gen_text_embeddings(
@@ -117,14 +121,8 @@ for item in data:
     to_tensor_tfm = tfms.ToTensor()
 
     # インペインティング
-    mask = torch.ones(1, 4, 64, 64).to(torch_device)
-    # mask[:, :, 15:49, 15:49] = 0
-    mask[:, :, 21:43, 21:43] = 0
-    # mask[:, :, 19:45, 19:45] = 0
-    # mask[:, :, 25:38, 25:38] = 0
-
-    # save_latent(mask, "./masked/mask")
-
+    mask = torch.ones(1, 4, height // 8, width // 8).to(torch_device)
+    mask[:, :, latent_mask_min:latent_mask_max, latent_mask_min:latent_mask_max] = 0
     mask = mask.to(torch_device)
 
     def A(z):
@@ -133,10 +131,11 @@ for item in data:
     Ap = A
 
     with torch.no_grad():
-        y = torch.cat([y[:, :, left:], y[:, :, :left]], 2)
-        y = torch.cat([y[:, up:, :], y[:, :up, :]], 1)
-        # y[:, 188:323, 188:323] = 0
-        y[:, 172:340, 172:340] = 0
+        y[
+            :,
+            height // 2 - mask_size // 2 : height // 2 + mask_size // 2 - 1,
+            width // 2 - mask_size // 2 : width // 2 + mask_size // 2 - 1,
+        ] = 0
         y = torch.unsqueeze(y, dim=0)
         y = 0.1825 * vae.encode(2 * y - 1).latent_dist.mean
 
@@ -161,9 +160,6 @@ for item in data:
             )
 
             # ひとつ前のサンプルを計算する x_t -> x_t-1
-
-            eta = 0.85
-            # eta = 0.5
 
             # 1. get previous step value (=t-1)
             prev_timestep = (
@@ -223,8 +219,6 @@ for item in data:
 
             latents = prev_sample
 
-        # save_latent(latents, "./changes/latent_" + str(i))
-
     # 画像の拡大縮小とVAEによる復号化
     latents = latents.float()
     latents = 1 / 0.18215 * latents
@@ -236,30 +230,17 @@ for item in data:
     image = (image.sample / 2 + 0.5).clamp(0, 1)
     image = image.detach().cpu().permute(0, 2, 3, 1).numpy()
     images = (image * 255).round().astype("uint8")
-    final_pil = np.array(Image.open(image_path).resize((512, 512)), np.uint8)
-    # final_pil = np.array(Image.open(image_path).resize((256, 256)), np.uint8)
+    final_pil = np.array(Image.open(image_path).resize((height, width)), np.uint8)
     iimages = Image.fromarray(images[0])
-    # iimages.save(
-    #     save_dir
-    #     + "_z/"
-    #     + image_file
-    # + prompt[0][0 : min(len(prompt[0]), 20)]:
-    # + "/my_"
-    # + prompt[0][0 : min(len(prompt[0]), 20)]
-    # + ".png"
-    # )
-    final_pil[172:340, 172:340, :] = images[0, 172:340, 172:340, :]
+    final_pil[
+        height // 2 - mask_size // 2 : height // 2 + mask_size // 2 - 1,
+        width // 2 - mask_size // 2 : width // 2 + mask_size // 2 - 1,
+        :,
+    ] = images[
+        0,
+        height // 2 - mask_size // 2 : height // 2 + mask_size // 2 - 1,
+        width // 2 - mask_size // 2 : width // 2 + mask_size // 2 - 1,
+        :,
+    ]
     ffinal_pil = Image.fromarray(final_pil)
-    # pil_images = [Image.fromarray(image) for image in images]
-    # pil_images[0].save(
-    ffinal_pil.save(
-        save_dir
-        + "/"
-        + os.path.basename(item["image"])
-        # + image_file
-        # + prompt[0][0 : min(len(prompt[0]), 20)]:
-        # + "/my_"
-        # + prompt[0][0 : min(len(prompt[0]), 20)]
-        # + ".png"
-    )
-# calc_metrics(save_dir, prompt
+    ffinal_pil.save(save_dir + "/" + os.path.basename(image_path))
