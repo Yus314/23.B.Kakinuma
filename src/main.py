@@ -8,6 +8,7 @@ from PIL import Image
 from torch import autocast
 from torchvision import transforms as tfms
 from tqdm.auto import tqdm
+from distutils.util import strtobool
 
 from sch_plus import randn_tensor
 from utile import (
@@ -19,7 +20,7 @@ from utile import (
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--mask_size", type=int, default=168)
-parser.add_argument("--use_BLIP", type=bool, default=True)
+parser.add_argument("--use_BLIP", type=strtobool, default=True)
 parser.add_argument("--image_dir", type=str, default="./ImageNet_o_prompt.json")
 parser.add_argument("--seed", type=int, default=11)
 parser.add_argument("--height", type=int, default=512)
@@ -49,6 +50,7 @@ eta = args.eta
 latent_mask_min = args.latent_mask_min
 latent_mask_max = args.latent_mask_max
 
+print(use_BLIP)
 
 # Set device
 torch_device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -91,6 +93,8 @@ for item in data:
         prompt = [item["prompt"]]
     else:
         prompt = [""]
+    print(use_BLIP)
+    print(prompt)
 
     save_dir = f"../Data/out/{os.path.basename(os.path.dirname(image_path))}_{mask_size}_{'BLIP' if use_BLIP else 'NOBLIP'}_{latent_mask_min}-{latent_mask_max}_{save_dir_option}"
     if not os.path.exists(save_dir):

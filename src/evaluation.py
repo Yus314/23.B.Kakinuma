@@ -2,7 +2,7 @@ import subprocess
 
 
 mask_size = 168
-use_BLIP = True
+use_BLIP = False
 image_dir = "./prompt/BSDS500_prompt.json"
 seed = 11
 height = 512
