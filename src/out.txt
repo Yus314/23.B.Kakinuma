@@ -1,6 +1,0 @@
-4.7.0
-PSNR:  18.08137825451678
-Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
-Loading model from: /usr/local/lib/python3.10/dist-packages/lpips/weights/v0.1/alex.pth
-LPIPS:  0.15575645864009857
-SSIM: 0.5918054572945843

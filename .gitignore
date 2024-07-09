@@ -1,6 +1,9 @@
 /.devcontainer/celeba_hq.ckpt
+.venv
 src/models
 src/cache
 *.tgz
 *.ckpt
 DDNM/
+Data/out
+src/__pycache__

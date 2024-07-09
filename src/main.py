@@ -16,7 +16,6 @@ from utile import (
     model_load,
 )
 
-print("Yes")
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--mask_size", type=int, default=168)
@@ -93,7 +92,7 @@ for item in data:
     else:
         prompt = [""]
 
-    save_dir = f"../Data/out/{os.path.basename(os.path.dirname(image_path))}_{mask_size}_{'BLIP' if use_BLIP else ''}_{save_dir_option}"
+    save_dir = f"../Data/out/{os.path.basename(os.path.dirname(image_path))}_{mask_size}_{'BLIP' if use_BLIP else 'NOBLIP'}_{latent_mask_min}-{latent_mask_max}_{save_dir_option}"
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 

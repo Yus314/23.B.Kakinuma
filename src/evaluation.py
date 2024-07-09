@@ -3,11 +3,11 @@ import subprocess
 
 mask_size = 168
 use_BLIP = True
-image_dir = "./BSDS500_prompt.json"
+image_dir = "./prompt/BSDS500_prompt.json"
 seed = 11
 height = 512
 width = 512
-save_dir_option = "testese"
+save_dir_option = ""
 num_inference_steps = 30
 guidance_scale = 7.5
 batch_size = 1
