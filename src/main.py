@@ -40,7 +40,7 @@ mask_size = args.mask_size
 use_BLIP = args.use_BLIP
 image_dir = args.image_dir
 seed = args.seed
-generator = torch.manual_seed(seed)
+# generator = torch.manual_seed(seed)
 height = args.height
 width = args.width
 save_dir_option = args.save_dir_option
@@ -50,6 +50,25 @@ batch_size = args.batch_size
 eta = args.eta
 latent_mask_min = args.latent_mask_min
 latent_mask_max = args.latent_mask_max
+
+print(args)
+print(mask_size)
+print(use_BLIP)
+print(image_dir)
+print(seed)
+# print(generator)
+print(height)
+print(width)
+print(save_dir_option)
+print(num_inference_steps)
+print(guidance_scale)
+print(batch_size)
+print(eta)
+print(latent_mask_min)
+print(latent_mask_max)
+print(type(guidance_scale))
+print(type(7.5))
+
 
 # Set device
 torch_device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -112,6 +131,7 @@ for item in data:
     scheduler.set_timesteps(num_inference_steps)
 
     # 潜在ベクトルの準備
+    generator = torch.manual_seed(seed)
     latents = torch.randn(
         (batch_size, unet.config.in_channels, height // 8, width // 8),
         generator=generator,

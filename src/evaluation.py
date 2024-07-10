@@ -1,19 +1,19 @@
 import subprocess
 
 
-mask_size = 136
-use_BLIP = True
+mask_size = 168
+use_BLIP = False
 image_dir = "./prompt/BSDS500_prompt.json"
-seed = 18
+seed = 11
 height = 512
 width = 512
-save_dir_option = "normal"
+save_dir_option = "moveSeed"
 num_inference_steps = 30
 guidance_scale = 7.5
 batch_size = 1
 eta = 0.85
-latent_mask_min = 23
-latent_mask_max = 41
+latent_mask_min = 21
+latent_mask_max = 43
 
 # 実行するPythonスクリプト
 script_name = "main.py"
