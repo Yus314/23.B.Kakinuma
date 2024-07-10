@@ -16,12 +16,13 @@ from utile import (
     load_image,
     model_load,
 )
+import subprocess
 
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--mask_size", type=int, default=168)
 parser.add_argument("--use_BLIP", type=strtobool, default=True)
-parser.add_argument("--image_dir", type=str, default="./ImageNet_o_prompt.json")
+parser.add_argument("--image_dir", type=str, default="./prompt/ImageNet_o_prompt.json")
 parser.add_argument("--seed", type=int, default=11)
 parser.add_argument("--height", type=int, default=512)
 parser.add_argument("--width", type=int, default=512)
@@ -49,8 +50,6 @@ batch_size = args.batch_size
 eta = args.eta
 latent_mask_min = args.latent_mask_min
 latent_mask_max = args.latent_mask_max
-
-print(use_BLIP)
 
 # Set device
 torch_device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -96,7 +95,7 @@ for item in data:
     print(use_BLIP)
     print(prompt)
 
-    save_dir = f"../Data/out/{os.path.basename(os.path.dirname(image_path))}_{mask_size}_{'BLIP' if use_BLIP else 'NOBLIP'}_{latent_mask_min}-{latent_mask_max}_{save_dir_option}"
+    save_dir = f"../Data/out/{os.path.basename(os.path.dirname(image_path))}_{mask_size}_{'BLIP' if use_BLIP else 'NOBLIP'}_{latent_mask_min}-{latent_mask_max}_{seed}{'_' if save_dir_option else ''}{save_dir_option}"
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
@@ -132,6 +131,8 @@ for item in data:
         return z * mask
 
     Ap = A
+    print(height // 2 - mask_size // 2)
+    print(height // 2 + mask_size // 2 - 1)
 
     with torch.no_grad():
         y[
@@ -234,7 +235,6 @@ for item in data:
     image = image.detach().cpu().permute(0, 2, 3, 1).numpy()
     images = (image * 255).round().astype("uint8")
     final_pil = np.array(Image.open(image_path).resize((height, width)), np.uint8)
-    iimages = Image.fromarray(images[0])
     final_pil[
         height // 2 - mask_size // 2 : height // 2 + mask_size // 2 - 1,
         width // 2 - mask_size // 2 : width // 2 + mask_size // 2 - 1,
@@ -247,3 +247,13 @@ for item in data:
     ]
     ffinal_pil = Image.fromarray(final_pil)
     ffinal_pil.save(save_dir + "/" + os.path.basename(image_path))
+args = [
+    "python",
+    "-m",
+    "pytorch_fid",
+    "--batch-size",
+    "1",
+    save_dir,
+    f"../Data/in/{os.path.basename(os.path.dirname(data[0]['image']))}",
+]
+subprocess.run(args)
